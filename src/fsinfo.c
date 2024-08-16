@@ -1,4 +1,5 @@
 
+
 #include "amaterasu.h"
 
 #define MajorFunction(Data) (Data->Iopb->MajorFunction)
@@ -59,9 +60,11 @@ PFS_INFO FsInfoGet(_PoolType_ POOL_TYPE PoolType, _In_ PVOID Data) {
 
     Status = FsInfoInit(FsInfo, Data);
     if (!NT_SUCCESS(Status)) {
-        FsInfoFree(&FsInfo);
+       FsInfoFree(&FsInfo);
+       return NULL;
     }
 
+    line();
     return FsInfo;
 }
 
@@ -80,18 +83,22 @@ PFS_INFO FsInfoGet(_PoolType_ POOL_TYPE PoolType, _In_ PVOID Data) {
  */
 NTSTATUS FsInfoInit(_Out_ PFS_INFO FsInfo, _In_ PFLT_CALLBACK_DATA Data) {
 
+    line();
+    if (!FsInfo || !Data || !Data->Iopb) {
+        return STATUS_UNSUCCESSFUL;
+    }
 
-    FsInfo->MjFunc = MajorFunction(Data);
-    FsInfo->ProcInfo = ProcInfoGet(FsInfo->PoolType, Data);
-    if (!FsInfo->ProcInfo) {
-        return STATUS_UNSUCCESSFUL;
-    }
-    
-    FsInfo->FileInfo = FileInfoGet(FsInfo->PoolType ,Data);
-    if (!FsInfo->FileInfo) {
-        ProcInfoFree(&FsInfo->ProcInfo);
-        return STATUS_UNSUCCESSFUL;
-    }
+	FsInfo->MjFunc = MajorFunction(Data);
+	FsInfo->ProcInfo = ProcInfoGet(FsInfo->PoolType, Data);
+	if (!FsInfo->ProcInfo) {
+	    return STATUS_UNSUCCESSFUL;
+	}
+	line();
+
+	FsInfo->FileInfo = FileInfoGet(FsInfo->PoolType ,Data);
+	if (!FsInfo->FileInfo) {
+	    ProcInfoFree(&FsInfo->ProcInfo);
+	}
 
     return STATUS_SUCCESS;
 }
@@ -105,9 +112,10 @@ NTSTATUS FsInfoInit(_Out_ PFS_INFO FsInfo, _In_ PFLT_CALLBACK_DATA Data) {
 void FsInfoDeInit(_Inout_ PFS_INFO FsInfo) {
 
     if (FsInfo) {
-        FileInfoFree(&FsInfo->FileInfo);
-        ProcInfoFree(&FsInfo->ProcInfo);
+        //FileInfoFree(&FsInfo->FileInfo);
+        //ProcInfoFree(&FsInfo->ProcInfo);
     }
+    line();
 }
 
 /*
@@ -117,9 +125,9 @@ void FsInfoDeInit(_Inout_ PFS_INFO FsInfo) {
  *  @FsInfo: Pointer to a reference of a 'FS_INFO' structure.
  */
 void FsInfoFree(_Inout_ PFS_INFO* FsInfo) {
-
+    line();
     if (FsInfo && *FsInfo) {
-        FsInfoDeInit(*FsInfo);
+        //FsInfoDeInit(*FsInfo);
         ExFreePoolWithTag(*FsInfo, 'fsif');
 
         /*
@@ -135,8 +143,19 @@ void FsInfoFree(_Inout_ PFS_INFO* FsInfo) {
  *  FsInfoCopy() -
  *
  *  @Dest:
- *  @Src:
- *
+ *  @Src: //if (FsInfo && *FsInfo) {
+    //    //FsInfoDeInit(*FsInfo);
+    //    ExFreePoolWithTag(*FsInfo, 'fsif');
+
+    //    /*
+    //     *  In order to avoid a dangling pointer, after deallocating the
+    //     *  'FS_INFO' structure, we set the reference to the 'FS_INFO'
+    //     *  struct to NULL.
+    //     */
+    //    *FsInfo = NULL;
+    //}
+
+/*
  *  Return:
  *    -
  *    -
@@ -148,4 +167,5 @@ void FsInfoCopy(_Out_ PFS_INFO_STATIC Dest, _In_ PFS_INFO Src) {
         FileInfoCopy(&Dest->FileInfo, Src->FileInfo);
         ProcInfoCopy(&Dest->ProcInfo, Src->ProcInfo);
     }
+    line();
 }

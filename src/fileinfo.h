@@ -71,7 +71,7 @@ FileInfoGet(
  */
 extern NTSTATUS
 FileInfoInit(
-    _Out_ PFILE_INFO FileInfo,
+    _Inout_ PFILE_INFO FileInfo,
     _In_ PFLT_CALLBACK_DATA Data
 );
 

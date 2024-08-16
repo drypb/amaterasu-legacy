@@ -48,13 +48,12 @@ PINFO_LIST InfoListAlloc(_PoolType_ POOL_TYPE PoolType) {
 PINFO_LIST InfoListGet(_PoolType_ POOL_TYPE PoolType, _In_ ULONG MaxRecords) {
 
     PINFO_LIST InfoList;
-
     InfoList = InfoListAlloc(PoolType);
     if (!InfoList) {
         return NULL;
     }
-
     InfoListInit(InfoList, MaxRecords);
+    line();
 
     return InfoList;
 }
@@ -84,7 +83,7 @@ static void InfoListFreeNodes(_Inout_ PINFO_LIST InfoList) {
 
     while (InfoList->RecordsAllocated) {
         Info = InfoListRemoveTail(InfoList);
-        InfoListFree(&InfoList);
+        InfoFree(&Info);
     }
 }
 
@@ -106,6 +105,7 @@ void InfoListFree(_Inout_ PINFO_LIST* InfoList) {
          */
         *InfoList = NULL;
     }
+    line();
 }
 
 /*
@@ -127,6 +127,7 @@ static void AppendInfo(_Inout_ PINFO_LIST InfoList, _In_ PINFO Info) {
      *  at the head.
      */
     if (InfoList->RecordsAllocated + 1 >= InfoList->MaxRecords) {
+
         RemovedInfo = InfoListRemoveTail(InfoList);
         InfoFree(&RemovedInfo);
     }
@@ -136,6 +137,7 @@ static void AppendInfo(_Inout_ PINFO_LIST InfoList, _In_ PINFO Info) {
 
     InsertHeadList(&InfoList->Head, &Info->ListEntry);
     KeReleaseSpinLock(&InfoList->Lock, OldIrql);
+    line();
 }
 
 /*
@@ -152,12 +154,19 @@ NTSTATUS InfoListAppend(_Inout_ PINFO_LIST InfoList, _In_ PVOID Data, _In_ INFO_
 
     PINFO Info;
 
+    if (InfoList == NULL) {
+        line();
+        return STATUS_UNSUCCESSFUL;
+    }
+
     Info = InfoGet(InfoList->PoolType, Data, InfoType);
     if (!Info) {
+        line();
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     AppendInfo(InfoList, Info);
+    line();
 
     return STATUS_SUCCESS;
 }
@@ -181,13 +190,16 @@ PINFO InfoListRemoveTail(_Inout_ PINFO_LIST InfoList) {
     KeAcquireSpinLock(&InfoList->Lock, &OldIrql);
 
     if (InfoList->RecordsAllocated) {
+        line();
         InfoList->RecordsAllocated--;
 
         Entry = RemoveTailList(&InfoList->Head);
         Info = CONTAINING_RECORD(Entry, INFO, ListEntry);
+        line();
     }
 
     KeReleaseSpinLock(&InfoList->Lock, OldIrql);
+    line();
 
     return Info;
 }

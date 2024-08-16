@@ -7,12 +7,21 @@
 #include "ioctl.h"
 #include "utils.h"
 
+extern void AddPidToHandleArr(_In_ ULONG PID);
+
 extern FLT_PREOP_CALLBACK_STATUS
 AmaterasuDefaultPreCallback(
     _Inout_ PFLT_CALLBACK_DATA Data,
     _In_ PCFLT_RELATED_OBJECTS FltObjects,
     _Flt_CompletionContext_Outptr_ PVOID* CompletionContext
 );
+
+extern FLT_POSTOP_CALLBACK_STATUS
+AmaterasuPost(
+	PFLT_CALLBACK_DATA Data,
+	PCFLT_RELATED_OBJECTS FltObjects,
+	PVOID* CompletionContext,
+	FLT_POST_OPERATION_FLAGS Flags);
 
 extern void AmaterasuLoadImageCallback(
 	PUNICODE_STRING FullImageName,

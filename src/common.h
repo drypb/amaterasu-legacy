@@ -43,4 +43,10 @@ DbgPrintEx(						                                                        	\
 
 #define Assert(expr, ...) AssertExpr(expr, __VA_ARGS__)
 
+#ifdef LINEDEBUG
+#define line() Debug("%s:%d\n", __func__, __LINE__)
+#else
+#define line() (void)0
+#endif
+
 #endif  /* COMMON_H */

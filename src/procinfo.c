@@ -1,3 +1,4 @@
+#define LINEDEBUG
 
 
 #include "procinfo.h"
@@ -62,6 +63,7 @@ PPROC_INFO ProcInfoGet(_PoolType_ POOL_TYPE PoolType, _In_ PFLT_CALLBACK_DATA Da
         ProcInfoFree(&ProcInfo);
     }
 
+    line();
     return ProcInfo;
 }
 
@@ -111,7 +113,7 @@ static inline void GetPID(_Out_ PULONG PID, _In_ PFLT_CALLBACK_DATA Data) {
      *  Gets the PID for the process associated with the thread that
      *  requested the I/O operation.
      */
-    *PID = FltGetRequestorProcessId(Data);
+    *PID = PsGetCurrentProcessId();
 }
 
 /*
@@ -119,7 +121,6 @@ static inline void GetPID(_Out_ PULONG PID, _In_ PFLT_CALLBACK_DATA Data) {
  *
  *  @ProcInfo:
  *  @Data:
- *
  *  Return:
  *    -
  *    -
@@ -136,6 +137,7 @@ static NTSTATUS GetIDs(_Inout_ PPROC_INFO ProcInfo, _In_ PFLT_CALLBACK_DATA Data
         return Status;
     }
 
+    line();
     return Status;
 }
 
@@ -164,6 +166,7 @@ NTSTATUS ProcInfoInit(_Inout_ PPROC_INFO ProcInfo, _In_ PFLT_CALLBACK_DATA Data)
         }
     }
 
+    line();
     return Status;
 }
 
@@ -185,6 +188,7 @@ void ProcInfoFree(_Inout_ PPROC_INFO* ProcInfo) {
          */
         *ProcInfo = NULL;
     }
+    line();
 }
 
 /*
@@ -198,16 +202,28 @@ void ProcInfoFree(_Inout_ PPROC_INFO* ProcInfo) {
  *    -
  */
 void ProcInfoCopy(_Out_ PPROC_INFO_STATIC Dest, _In_ PPROC_INFO Src) {
+    line();
+    __try {
+        if (Dest && Src) {
 
-    if (Dest && Src) {
-        RtlCopyMemory(Dest->ImageName, Src->ImageName, sizeof Dest->ImageName);
+            RtlCopyMemory(Dest->ImageName, Src->ImageName, sizeof Dest->ImageName);
+            
+            RtlCopyMemory(&Dest->PID, &Src->PID, sizeof Dest->PID);
+            RtlCopyMemory(&Dest->SID, &Src->SID, sizeof Dest->SID);
+            RtlCopyMemory(&Dest->TID, &Src->TID, sizeof Dest->TID);
 
-        RtlCopyMemory(&Dest->PID, &Src->PID, sizeof Dest->PID);
-        RtlCopyMemory(&Dest->SID, &Src->SID, sizeof Dest->SID);
-        RtlCopyMemory(&Dest->TID, &Src->TID, sizeof Dest->TID);
+            DbgPrint("Dest: %p", Dest);
+            DbgPrint("Dest->PID: %p\n", &Dest->PID);
+            DbgPrint("Dest->SID: %p\n", &Dest->SID);
+            DbgPrint("Dest->TID: %p\n", &Dest->TID);
 
-        TokenInfoCopy(&Dest->TokenInfo, &Src->TokenInfo);
+            TokenInfoCopy(&Dest->TokenInfo, &Src->TokenInfo);
+        }
+    } except(EXCEPTION_CONTINUE_EXECUTION) {
+        line();
+        return;
     }
+    line();
 }
 
 

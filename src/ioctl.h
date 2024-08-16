@@ -2,6 +2,7 @@
 #define IOCTL_H
 
 #include "common.h"
+#include "amaterasu.h"
 
 #define SystemBuffer(Irp) Irp->AssociatedIrp.SystemBuffer
 #define OutputBufferLength(IrpIoStack) IrpIoStack->Parameters.DeviceIoControl.OutputBufferLength

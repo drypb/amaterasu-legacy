@@ -10,12 +10,22 @@
 #define DRIVER_NAME L"\\Device\\MiniFilter"
 #define DEVICE_SYM_LINK L"\\DosDevices\\MiniFilter"
 #define CALLBACK_NUMBER 4
+#define MaxRecords(Amaterasu) Amaterasu.DriverSettings.MaxRecords
+#define EnabledCallbacks(Amaterasu) Amaterasu.DriverSettings.EnabledCallbacks
+#define IsRegCallbackOn(Amaterasu) Amaterasu.DriverSettings.EnabledCallbacks[REG_CALLBACK]
+#define IsProcCallbackOn(Amaterasu) Amaterasu.DriverSettings.EnabledCallbacks[PROC_CALLBACK]
+#define IsFsCallbackOn(Amaterasu) Amaterasu.DriverSettings.EnabledCallbacks[FS_CALLBACK]
+#define IsLoadImageCallbackOn(Amaterasu) Amaterasu.DriverSettings.EnabledCallbacks[LOAD_IMAGE_CALLBACK]
+
+
 
 
 struct _DriverSettings {
     BOOLEAN EnabledCallbacks[CALLBACK_NUMBER];
-    ULONG ListMaxRecords;
-    WCHAR TargetName[MAX_PATH];
+    ULONG MaxRecords;
+    WCHAR TargetName[MAX_PATH + 1];
+    ULONG TargetNameSize;
+    ULONG TargetPid;
 };
 
 typedef struct _DriverSettings DRIVER_SETTINGS, * PDRIVER_SETTINGS;
@@ -29,7 +39,6 @@ enum CallbacksTypes {
 
 typedef enum CallbacksTypes CALLBACK_TYPES, * PCALLBACK_TYPES;
 
-
 struct Amaterasu {
 
     PDRIVER_OBJECT  DriverObject;
@@ -37,12 +46,13 @@ struct Amaterasu {
     PFLT_FILTER     FilterHandle;
 
     KSPIN_LOCK      HandleArrLock;
-    SIZE_T          HandleArrSize;
-    HANDLE          HandleArr[1024];
+    ULONG           HandleArrSize;
+    ULONG          HandleArr[1024];
     
     PINFO_LIST      InfoList;
 
-    PDRIVER_SETTINGS DriverSettings;
+    DRIVER_SETTINGS DriverSettings;
+
 
     LARGE_INTEGER Cookie;
 
@@ -50,23 +60,13 @@ struct Amaterasu {
 
 extern struct Amaterasu Amaterasu;
 
-extern NTSTATUS
-Create(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ PIRP Irp
-);
 
-extern NTSTATUS 
-Close(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ PIRP Irp
-);
+
 
 extern NTSTATUS
 AmaterasuSetup(
     PIRP Irp, 
-    PIO_STACK_LOCATION IrpIoStack, 
-    PULONG InfoSize
+    PIO_STACK_LOCATION IrpIoStack
 );
 
 /*

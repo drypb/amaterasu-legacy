@@ -1,4 +1,5 @@
 
+
 #include "info.h"
 
 struct BaseFuncs {
@@ -74,9 +75,12 @@ PINFO InfoGet(_PoolType_ POOL_TYPE PoolType, _In_ PVOID Data, _In_ INFO_TYPE Inf
 
     Status = InfoInit(Info, Data, InfoType);
     if (!NT_SUCCESS(Status)) {
+        line();
         InfoFree(&Info);
+        return NULL;
     }
 
+    line();
     return Info;
 }
 
@@ -112,15 +116,49 @@ static inline void InitTimeFields(_Out_ PTIME_FIELDS TimeFields) {
  */
 NTSTATUS InfoInit(_Out_ PINFO Info, _In_ PVOID Data, _In_ INFO_TYPE InfoType) {
 
+    NTSTATUS Status = STATUS_SUCCESS;
+
     InitTimeFields(&Info->TimeFields);
 
+    line();
+
     Info->InfoType = InfoType;
-    Info->Info.Data = funcs[InfoType].get(Info->PoolType, Data);
+    //Info->Info.Data = funcs[InfoType].get(Info->PoolType, Data);
+    switch (InfoType) {
+    case INFO_FS:
+        Info->Info.FsInfo = FsInfoGet(Info->PoolType, Data);
+        break;
+
+    case INFO_PROC:
+        Info->Info.ProcData = ProcDataGet(Info->PoolType, Data);
+        line();
+        break;
+
+    case INFO_LOAD:
+        Info->Info.LoadImageInfo = LoadImageInfoGet(Info->PoolType, Data);
+        break;
+
+    case INFO_REG:
+        Info->Info.RegInfo = RegInfoGet(Info->PoolType, Data);
+        break;
+    }
     if (!Info->Info.Data) {
         return STATUS_UNSUCCESSFUL;
     }
 
-    return STATUS_SUCCESS;
+    return Status;
+
+    //InitTimeFields(&Info->TimeFields);
+
+    //Info->InfoType = InfoType;
+    ////Info->Info.Data = funcs[InfoType].get(Info->PoolType, Data);
+    //if (!Info->Info.Data) {
+    //    line();
+    //    return STATUS_UNSUCCESSFUL;
+    //}
+
+    //line();
+    //return STATUS_SUCCESS;
 }
 
 /*
@@ -134,6 +172,7 @@ void InfoDeInit(_Inout_ PINFO Info) {
     if (Info) {
         funcs[Info->InfoType].free(&Info->Info.Data);
     }
+    line();
 }
 
 /*
@@ -155,6 +194,7 @@ void InfoFree(_Inout_ PINFO* Info) {
          */
         *Info = NULL;
     }
+    line();
 }
 
 /*
@@ -173,13 +213,30 @@ void InfoCopy(_Inout_ PINFO_STATIC Dest, _In_ PINFO Src) {
 
         RtlCopyMemory(&Dest->TimeFields, &Src->TimeFields, sizeof Dest->TimeFields);
         Dest->InfoType = Src->InfoType;
-        funcs[Dest->InfoType].copy(
-            /*
-             *  Could go wrong as we are using a placeholder
-             *  for the types defined in the union.
-             */
-            &Dest->Info.Data,
-            Src->Info.Data
-        );
+        switch (Src->InfoType) {
+        case INFO_FS:
+            FsInfoCopy(&Dest->Info.FsInfo, Src->Info.FsInfo);
+            break;
+        case INFO_PROC:
+            ProcDataCopy(&Dest->Info.ProcData, Src->Info.ProcData);
+            break;
+        case INFO_LOAD:
+            LoadImageCopy(&Dest->Info.LoadImageInfo, Src->Info.LoadImageInfo);
+            break;
+        case INFO_REG:
+            RegInfoCopy(&Dest->Info.RegInfo, Src->Info.RegInfo);
+            break;
+        }
+        line();
+        //funcs[Dest->InfoType].copy(
+        //    /*
+        //     *  Could go wrong as we are using a placeholder
+        //     *  for the types defined in the union.
+        //     */
+        //    &Dest->Info.Data,
+        //    Src->Info.Data
+        //);
+
     }
+    line();
 }

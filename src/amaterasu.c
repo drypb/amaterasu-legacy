@@ -1,6 +1,6 @@
+#define LINEDEBUG
 
 #include "amaterasu.h"
-
 struct Amaterasu Amaterasu;
 
 DECLARE_CONST_UNICODE_STRING(REG_CALLBACK_ALTITUDE, L"388990");
@@ -10,19 +10,25 @@ static const FLT_OPERATION_REGISTRATION Callbacks[] = {
         IRP_MJ_CREATE,
         0,
         AmaterasuDefaultPreCallback,
-        NULL
+        AmaterasuPost
     },
     {
         IRP_MJ_READ,
         0,
         AmaterasuDefaultPreCallback,
-        NULL
+        AmaterasuPost
     },
     {
         IRP_MJ_WRITE,
         0,
         AmaterasuDefaultPreCallback,
-        NULL
+        AmaterasuPost
+    },
+    {
+        IRP_MJ_CLOSE,
+        0, 
+        AmaterasuDefaultPreCallback,
+        AmaterasuPost
     },
     {IRP_MJ_OPERATION_END}
 };
@@ -42,7 +48,8 @@ FLT_REGISTRATION FilterRegistration = {
      *  'FLTFL_REGISTRATION_SUPPORT_DAX_VOLUME' specifies support for Direct
      *  Access (DAX) volumes.
      */
-    FLTFL_REGISTRATION_SUPPORT_NPFS_MSFS | FLTFL_REGISTRATION_SUPPORT_DAX_VOLUME,
+    //FLTFL_REGISTRATION_SUPPORT_NPFS_MSFS | FLTFL_REGISTRATION_SUPPORT_DAX_VOLUME 
+    NULL,
     NULL,
     Callbacks,
     AmaterasuUnload,
@@ -89,12 +96,12 @@ static NTSTATUS AmaterasuInitProcFilter(void) {
     NTSTATUS Status;
 
     Status = PsSetCreateProcessNotifyRoutine(&AmaterasuProcCallback, FALSE);
-    if (NT_SUCCESS(Status)) {
-        Status = PsSetCreateThreadNotifyRoutine(&AmaterasuThreadCallback);
-        if(!NT_SUCCESS(Status)) {
-            PsSetCreateProcessNotifyRoutine(&AmaterasuProcCallback, TRUE);
-        }
-    }
+    //if (NT_SUCCESS(Status)) {
+    //    //Status = PsSetCreateThreadNotifyRoutine(&AmaterasuThreadCallback);
+    //    //if(!NT_SUCCESS(Status)) {
+    //    //    PsSetCreateProcessNotifyRoutine(&AmaterasuProcCallback, TRUE);
+    //    //}
+    //}
 
     return Status;
 }
@@ -138,36 +145,38 @@ static NTSTATUS AmaterasuInitFilters(_In_ PDRIVER_OBJECT DriverObject) {
 
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if(Amaterasu.DriverSettings->EnabledCallbacks[FS_CALLBACK]) {
+    if(IsFsCallbackOn(Amaterasu)) {
         Status = AmaterasuInitFsFilter(DriverObject);
         if(!NT_SUCCESS(Status)) {
+            line();
             return Status;
         }
-        Amaterasu.DriverSettings->EnabledCallbacks[FS_CALLBACK] = 0;
+        Amaterasu.DriverSettings.EnabledCallbacks[FS_CALLBACK] = 0;
+        line();
     }
 
-    if(Amaterasu.DriverSettings->EnabledCallbacks[PROC_CALLBACK]) {
+    if(IsProcCallbackOn(Amaterasu)) {
         Status = AmaterasuInitProcFilter();
         if(!NT_SUCCESS(Status)) {
             return Status; 
         }
-        Amaterasu.DriverSettings->EnabledCallbacks[PROC_CALLBACK] = 0;
+        Amaterasu.DriverSettings.EnabledCallbacks[PROC_CALLBACK] = 0;
     }
 
-    if(Amaterasu.DriverSettings->EnabledCallbacks[LOAD_IMAGE_CALLBACK]) {
+    if(IsLoadImageCallbackOn(Amaterasu)) {
         Status = AmaterasuInitLoadImageFilter();
         if(!NT_SUCCESS(Status)) {
             return Status; 
         }
-        Amaterasu.DriverSettings->EnabledCallbacks[LOAD_IMAGE_CALLBACK] = 0;
+        Amaterasu.DriverSettings.EnabledCallbacks[LOAD_IMAGE_CALLBACK] = 0;
     }
 
-    if(Amaterasu.DriverSettings->EnabledCallbacks[REG_CALLBACK]) {
+    if(IsRegCallbackOn(Amaterasu)) {
         Status = AmaterasuInitRegFilter(DriverObject);
         if(!NT_SUCCESS(Status)) {
             return Status;
         }
-        Amaterasu.DriverSettings->EnabledCallbacks[REG_CALLBACK] = 0;
+        Amaterasu.DriverSettings.EnabledCallbacks[REG_CALLBACK] = 0;
     }
 
     return Status;
@@ -191,11 +200,11 @@ static NTSTATUS AmaterasuInit(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_ST
 
     KeInitializeSpinLock(&Amaterasu.HandleArrLock);
 
-    AmaterasuInitFilters(DriverObject);
-    Amaterasu.InfoList = InfoListGet(NonPagedPool, MAX_RECORDS);
-    if (!Amaterasu.InfoList) {
-        return STATUS_UNSUCCESSFUL;
-    }
+    //AmaterasuInitFilters(DriverObject);
+    //Amaterasu.InfoList = InfoListGet(NonPagedPool, MAX_RECORDS);
+    //if (!Amaterasu.InfoList) {
+    //    return STATUS_UNSUCCESSFUL;
+    //}
 
     Amaterasu.DriverObject = DriverObject;
     Amaterasu.RegistryPath = RegistryPath;
@@ -246,23 +255,40 @@ NTSTATUS Close(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
  *    -
  *    -
  */
-NTSTATUS AmaterasuSetup(PIRP Irp, PIO_STACK_LOCATION IrpIoStack, PULONG InfoSize) {
+NTSTATUS AmaterasuSetup(PIRP Irp, PIO_STACK_LOCATION IrpIoStack) {
     
 	NTSTATUS Status;
     PDRIVER_SETTINGS DriverSettings; 
     ULONG BufferLen;
 
+    DbgPrint("entrou no amaterasu setup");
+
     Status = STATUS_SUCCESS;
     DriverSettings = SystemBuffer(Irp);
 	BufferLen = OutputBufferLength(IrpIoStack);
 
-	AmaterasuInitFilters(Amaterasu.DriverObject);
-    Amaterasu.InfoList = InfoListGet(NonPagedPool, DriverSettings->ListMaxRecords);
+
+    RtlCopyMemory(Amaterasu.DriverSettings.EnabledCallbacks, DriverSettings->EnabledCallbacks, sizeof Amaterasu.DriverSettings.EnabledCallbacks);
+    RtlCopyMemory(&Amaterasu.DriverSettings.MaxRecords, &DriverSettings->MaxRecords, sizeof Amaterasu.DriverSettings.MaxRecords);
+    RtlCopyMemory(Amaterasu.DriverSettings.TargetName, DriverSettings->TargetName, sizeof Amaterasu.DriverSettings.TargetName);
+    Amaterasu.DriverSettings.TargetNameSize = DriverSettings->TargetNameSize;
+
+    Amaterasu.DriverSettings.TargetPid = DriverSettings->TargetPid;
+
+    AddPidToHandleArr(Amaterasu.DriverSettings.TargetPid);
+
+    DbgPrint("TargetPid: %ul\n", Amaterasu.DriverSettings.TargetPid);
+
+    Amaterasu.InfoList = InfoListGet(POOL_FLAG_NON_PAGED, MaxRecords(Amaterasu));
     if (!Amaterasu.InfoList) {
+        line();
         return STATUS_UNSUCCESSFUL;
     }
+    AmaterasuInitFilters(Amaterasu.DriverObject);
+    Amaterasu.HandleArrSize = 0;
 
-    Amaterasu.DriverSettings = DriverSettings;
+
+    DbgPrint("Amaterasu Setup saindo");
 
 	return Status;
 }
@@ -337,6 +363,8 @@ NTSTATUS DispatchRoutinesSetup(_In_ PDRIVER_OBJECT DriverObject){
 NTSTATUS AmaterasuCleanup(void) {
 
     InfoListFree(&Amaterasu.InfoList);
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -352,24 +380,29 @@ NTSTATUS AmaterasuUnload(_In_ FLT_FILTER_UNLOAD_FLAGS Flags) {
 
     UNREFERENCED_PARAMETER(Flags);
 
+    NTSTATUS Status = STATUS_SUCCESS;
+
     AmaterasuCleanup();
 
-    if(!Amaterasu.DriverSettings->EnabledCallbacks[FS_CALLBACK]) {
+    if(!Amaterasu.DriverSettings.EnabledCallbacks[FS_CALLBACK]) {
         FltUnregisterFilter(Amaterasu.FilterHandle);
     }
 
-    if(!Amaterasu.DriverSettings->EnabledCallbacks[PROC_CALLBACK]) {
-        PsSetCreateProcessNotifyRoutine(&AmaterasuProcCallback, TRUE);
-        PsRemoveCreateThreadNotifyRoutine(&AmaterasuThreadCallback);
+    if(!Amaterasu.DriverSettings.EnabledCallbacks[PROC_CALLBACK]) {
+        Status = PsSetCreateProcessNotifyRoutine(&AmaterasuProcCallback, TRUE);
+        
+        //Status = PsRemoveCreateThreadNotifyRoutine(&AmaterasuThreadCallback);
     }
     
-    if(!Amaterasu.DriverSettings->EnabledCallbacks[LOAD_IMAGE_CALLBACK]) {
-        PsRemoveLoadImageNotifyRoutine(&AmaterasuLoadImageCallback);
+    if(!Amaterasu.DriverSettings.EnabledCallbacks[LOAD_IMAGE_CALLBACK]) {
+        Status = PsRemoveLoadImageNotifyRoutine(&AmaterasuLoadImageCallback);
     }
 
-    if(!Amaterasu.DriverSettings->EnabledCallbacks[REG_CALLBACK]) {
-        CmUnRegisterCallback(Amaterasu.Cookie);
+    if(!Amaterasu.DriverSettings.EnabledCallbacks[REG_CALLBACK]) {
+        Status = CmUnRegisterCallback(Amaterasu.Cookie);
     }
+    
+    return Status;
 }
 
 /*
@@ -385,9 +418,10 @@ NTSTATUS AmaterasuUnload(_In_ FLT_FILTER_UNLOAD_FLAGS Flags) {
 NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath) {
 
     NTSTATUS Status;
+    DbgPrint("entrou no driver entry");
 
     /* Makes non-paged pools (kernel pools) allocations non-executable. */
-    ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+    //ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
 
     Status = AmaterasuInit(DriverObject, RegistryPath);
     if (NT_SUCCESS(Status)) {
@@ -400,6 +434,8 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
     if(!NT_SUCCESS(Status)) {
         AmaterasuCleanup();
     }
+
+    DbgPrint("saindo do driver entry\n")
 
     return Status;
 }

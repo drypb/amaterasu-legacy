@@ -26,7 +26,7 @@ struct ProcInfoStatic {
 
     ULONG PID;
     ULONG SID;
-    HANDLE TID;
+    ULONG TID;
 
     TOKEN_INFO_STATIC TokenInfo;
 };

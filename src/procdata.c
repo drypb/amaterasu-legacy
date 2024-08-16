@@ -51,18 +51,26 @@ PPROC_DATA ProcDataGet(_In_ POOL_TYPE PoolType, _In_ PIDENTIFIER Data) {
     NTSTATUS Status;
     PPROC_DATA ProcData;
 
+    line();
     ProcData = ProcDataAlloc(PoolType);
     if (!ProcData) {
+        line();
         return NULL;
     }
 
+    line();
     Status = ProcDataInit(ProcData, Data);
     if (!NT_SUCCESS(Status)) {
+        line();
         ProcDataFree(&ProcData);
     }
 
+    line();
     return ProcData;
 }
+
+//#undef line()
+//#define line() (void)0
 
 /*
  *  ProcInitInfo() - Initializes a 'PROC_DATA' struct.
@@ -80,20 +88,26 @@ NTSTATUS ProcDataInit(_Out_ PPROC_DATA ProcData, _In_ PIDENTIFIER Data) {
 
     NTSTATUS Status;
 
+    line();
     Status = TokenInfoGet(&ProcData->TokenInfo, Data->PPID);
     if (!NT_SUCCESS(Status)) {
+        line();
         return Status;
     }
 
     RtlCopyMemory(&ProcData->Ids, Data, sizeof ProcData->Ids);
 
+    line();
 	Status = GetImageName(Data->PPID, ProcData->ParentName);
 	if (NT_SUCCESS(Status)) {
+        line();
         if (!ProcData->Ids.isThread) {
+            line();
             Status = GetImageName(Data->Id.ID, ProcData->ChildName);
         }
 	}
 
+    line();
     return Status;
 }
 
