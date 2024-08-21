@@ -141,10 +141,10 @@ static void IdentifierCopy(_Out_ PIDENTIFIER Dest, _In_ PIDENTIFIER Src) {
 
     if (Dest && Src) {
 
-        RtlCopyMemory(&Dest->PPID, &Src->PPID, sizeof Dest->PPID);
-        RtlCopyMemory(&Dest->Id.ID, &Src->Id.ID, sizeof Dest->Id.ID);
-        RtlCopyMemory(&Dest->isThread, &Src->isThread, sizeof Dest->isThread);
-        RtlCopyMemory(&Dest->Active, &Src->Active, sizeof Dest->Active);
+        CopyToUserMode(&Dest->PPID, &Src->PPID, sizeof Src->PPID, HANDLE);
+        CopyToUserMode(&Dest->Id.ID, &Src->Id.ID, sizeof Dest->Id.ID, HANDLE);
+        CopyToUserMode(&Dest->isThread, &Src->isThread, sizeof Dest->isThread, BOOLEAN);
+        CopyToUserMode(&Dest->Active, &Src->Active, sizeof Dest->Active, BOOLEAN);
     }
 }
 
@@ -158,9 +158,10 @@ void ProcDataCopy(_Out_ PPROC_DATA_STATIC Dest, _In_ PPROC_DATA Src) {
 
     if (Dest && Src) {
 
+        
         IdentifierCopy(&Dest->Ids, &Src->Ids);
         TokenInfoCopy(&Dest->TokenInfo, &Src->TokenInfo);
-        RtlCopyMemory(Dest->ParentName, Src->ParentName, sizeof Dest->ParentName);
-        RtlCopyMemory(Dest->ChildName, Src->ChildName, sizeof Dest->ChildName);
+        CopyToUserMode(Dest->ParentName, Src->ParentName, sizeof Dest->ParentName, WCHAR);
+        CopyToUserMode(Dest->ChildName, Src->ChildName, sizeof Dest->ChildName, WCHAR);
     }
 }

@@ -228,3 +228,18 @@ NTSTATUS GetImageName(_In_ HANDLE ID, _Out_ PWSTR ImageBuf) {
     return Status;
 }
 
+NTSTATUS (CopyToUserMode)(_Out_ PVOID Dest, _In_ PVOID Src, _In_ SIZE_T Size, _In_ SIZE_T Align) {
+
+    if (Dest && Src) {
+        __try {
+            ProbeForWrite(Dest, Src, Align);
+            RtlCopyMemory(Dest, Src, Size);
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER) {
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+

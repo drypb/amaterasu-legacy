@@ -49,4 +49,14 @@ DbgPrintEx(						                                                        	\
 #define line() (void)0
 #endif
 
+#define PROBE_AND_COPY(Dest, Src, Size)                     \
+    do {                                                    \
+        if(Dest && Src) {                                   \
+            ProbeForWrite(Dest, Src, __alignof(Src));      \
+            RtlCopyMemory(Dest, Src, Size);                 \
+        }                                                   \
+    } while(0)
+
+
+
 #endif  /* COMMON_H */

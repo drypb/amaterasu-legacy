@@ -1,6 +1,7 @@
 
 #include "token.h"
-
+#include "common.h"
+#include "utils.h"
 /*
  *  AcquireTokenInfo() - Acquires various token information.
  *  
@@ -142,34 +143,39 @@ NTSTATUS TokenInfoGet(_Inout_ PTOKEN_INFO TokenInfo, _In_ HANDLE PID) {
  */
 void TokenInfoCopy(_Out_ PTOKEN_INFO_STATIC Dest, _In_ PTOKEN_INFO Src) {
 
+	NTSTATUS Status;
     ULONG PrivSize;
 
 	__try {
 		line();
 		if (Dest && Src) {
 
-			line();
 			PrivSize = Src->Privileges->PrivilegeCount * sizeof * Src->Privileges->Privileges;
-			line();
-			Dest->Privileges.PrivilegeCount = Src->Privileges->PrivilegeCount;
+			//Dest->Privileges.PrivilegeCount = Src->Privileges->PrivilegeCount;
+			
+			Status = CopyToUserMode(&Dest->Privileges.PrivilegeCount, &Src->Privileges->PrivilegeCount, sizeof Src->Privileges->PrivilegeCount, ULONG);
+			if (NT_SUCCESS(Status)) {
+				Status = CopyToUserMode(&Dest->Type, &Src->Type, sizeof * Src->Type, PTOKEN_TYPE);
+				if (NT_SUCCESS(Status)) {
+					Status = CopyToUserMode(&Dest->TokenElevation, &Src->TokenElevation, sizeof * Src->TokenElevation, PTOKEN_ELEVATION);
+					if (NT_SUCCESS(Status)) {
+						Status = CopyToUserMode(Dest->Privileges.Privileges, Src->Privileges->Privileges, PrivSize, LUID_AND_ATTRIBUTES);
+					}
+				}
+			}
 
-			line();
-			RtlCopyMemory(&Dest->Type, Src->Type, sizeof * Src->Type);
-			line();
-			RtlCopyMemory(&Dest->TokenElevation, Src->TokenElevation, sizeof * Src->TokenElevation);
-			line();
-			RtlCopyMemory(Dest->Privileges.Privileges, Src->Privileges->Privileges, PrivSize);
-			line();
-
-			if (*Src->Type == TokenImpersonation) {
-				line();
-				RtlCopyMemory(&Dest->ImpersonationLevel, Src->ImpersonationLevel, sizeof * Src->ImpersonationLevel);
-				line();
+			if (NT_SUCCESS(Status)) {
+				if (*Src->Type == TokenImpersonation) {
+					CopyToUserMode(&Dest->ImpersonationLevel, Src->ImpersonationLevel, sizeof * Src->ImpersonationLevel, PSECURITY_IMPERSONATION_LEVEL);
+				}
 			}
 		}
 	} except(EXCEPTION_CONTINUE_EXECUTION) {
 		line();
 		return;
 	}
+
+	int k = _Alignof(k);
+
 	line();
 }

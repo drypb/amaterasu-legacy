@@ -125,6 +125,7 @@ NTSTATUS IoControl(_In_ PDEVICE_OBJECT Device, _In_ PIRP Irp) {
 				case IOCTL_GET_INFO:
 					line();
 					DbgPrint("InfoClone %d\n", Amaterasu.InfoList->RecordsAllocated);
+
 					Status = InfoClone(Irp, IrpIoStack, &ClonedInfoSize);
 					DbgPrint("Size: %d", ClonedInfoSize);
 					break;

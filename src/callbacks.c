@@ -1,6 +1,8 @@
 #include "callbacks.h"
 #include "amaterasu.h"
 
+int a;
+
 static inline BOOLEAN IsPassiveIRQL(void) {
 
     KIRQL Irql;

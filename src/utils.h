@@ -54,4 +54,14 @@ GetImageName(
     _Out_ PWSTR ImageBuf
 );
 
+extern NTSTATUS
+CopyToUserMode(
+    _Out_ PVOID  Dest,
+    _In_  PVOID  Src,
+    _In_  SIZE_T Size,
+    _In_  SIZE_T Align
+);
+
+#define CopyToUserMode(Dest, Src, Size, type) (Dest, Src, Size, __alignof(type))
+
 #endif  /* UTILS_H */
