@@ -206,11 +206,17 @@ void ProcInfoCopy(_Out_ PPROC_INFO_STATIC Dest, _In_ PPROC_INFO Src) {
     __try {
         if (Dest && Src) {
 
-            RtlCopyMemory(Dest->ImageName, Src->ImageName, sizeof Dest->ImageName);
+            CopyToUserMode(Dest->ImageName, Src->ImageName, sizeof Dest->ImageName, __alignof(WCHAR));
+
+            //RtlCopyMemory(Dest->ImageName, Src->ImageName, sizeof Dest->ImageName);
             
-            RtlCopyMemory(&Dest->PID, &Src->PID, sizeof Dest->PID);
-            RtlCopyMemory(&Dest->SID, &Src->SID, sizeof Dest->SID);
-            RtlCopyMemory(&Dest->TID, &Src->TID, sizeof Dest->TID);
+            CopyToUserMode(&Dest->PID, &Src->PID, sizeof Dest->PID, __alignof(HANDLE));
+            CopyToUserMode(&Dest->SID, &Src->SID, sizeof Dest->SID, __alignof(ULONG));
+            CopyToUserMode(&Dest->TID, &Src->TID, sizeof Dest->TID, __alignof(HANDLE));
+
+            //RtlCopyMemory(&Dest->PID, &Src->PID, sizeof Dest->PID);
+            //RtlCopyMemory(&Dest->SID, &Src->SID, sizeof Dest->SID);
+            //RtlCopyMemory(&Dest->TID, &Src->TID, sizeof Dest->TID);
 
             DbgPrint("Dest: %p", Dest);
             DbgPrint("Dest->PID: %p\n", &Dest->PID);

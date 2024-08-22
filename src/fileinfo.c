@@ -213,8 +213,11 @@ void FileInfoCopy(_Out_ PFILE_INFO_STATIC Dest, _In_ PFILE_INFO Src) {
 
     __try {
         if (Dest && Src) {
-            RtlCopyMemory(Dest->Name, Src->Name, sizeof Dest->Name);
-            RtlCopyMemory(Dest->Path, Src->Path, sizeof Dest->Path);
+            CopyToUserMode(Dest->Name, Src->Name, sizeof Dest->Name, __alignof(WCHAR));
+            CopyToUserMode(Dest->Path, Src->Path, sizeof Dest->Path, __alignof(WCHAR));
+
+            /*RtlCopyMemory(Dest->Name, Src->Name, sizeof Dest->Name);
+            RtlCopyMemory(Dest->Path, Src->Path, sizeof Dest->Path);*/
         }
     } except(EXCEPTION_CONTINUE_EXECUTION){
         line();
