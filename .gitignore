@@ -7,3 +7,4 @@
 *.inf
 *.pfx
 *.sys
+/.vs

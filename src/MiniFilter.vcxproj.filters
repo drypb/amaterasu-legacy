@@ -103,9 +103,6 @@
     <ClInclude Include="LoadImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RegInfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="procdata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -131,6 +128,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="fsinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="reginfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

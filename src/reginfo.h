@@ -1,8 +1,14 @@
-#ifndef REGINFO_H
-#define REGINFO_H
+#ifndef REG_H
+#define REG_H
 
 #include "common.h"
 #include "utils.h"
+
+
+/*
+close, query , open , set, delete
+*/
+
 
 struct RegInfoData {
 	REG_NOTIFY_CLASS RegNotifyClass;
@@ -25,8 +31,6 @@ struct RegInfo {
 	POOL_TYPE PoolType;
 };
 
-typedef struct RegInfo REG_INFO, * PREG_INFO;
-
 struct RegInfoStatic {
 
 	REG_NOTIFY_CLASS RegNotifyClass;
@@ -39,48 +43,28 @@ struct RegInfoStatic {
 	ULONG DataType;
 };
 
+typedef struct RegInfo REG_INFO, * PREG_INFO;
 
 typedef struct RegInfoStatic REG_INFO_STATIC, * PREG_INFO_STATIC;
 
-/*
- *  RegInfoAlloc() - Allocate a 'REG_INFO' structure.
- *
- *  @PoolType: The type of memory pool to allocate from (paged or nonpaged).
- *
- *  Return:
- *    - Pointer to the allocated 'REG_INFO' structure on success.
- *    - 'NULL' if memory allocation fails.
- */
-extern PREG_INFO
-RegInfoAlloc(
-    _PoolType_ POOL_TYPE PoolType
-);
+PREG_INFO RegInfoAlloc(_PoolType_ POOL_TYPE PoolType);
 
-extern PREG_INFO
-RegInfoGet(
+PREG_INFO RegInfoGet(
 	_PoolType_ POOL_TYPE PoolType,
-	_In_ PREG_INFO_DATA RegInfoData
+	PREG_INFO_DATA RegInfoData
 );
 
-extern NTSTATUS
-RegInfoInit(
-    _Inout_ PREG_INFO RegInfo,
-    _In_ PREG_INFO_DATA RegInfoData
+extern NTSTATUS RegInfoInit(PREG_INFO RegInfo, REG_NOTIFY_CLASS RegOperation, PVOID RegStruct);
+
+void RegInfoCopy(
+	PREG_INFO_STATIC StaticRegInfo,
+	PREG_INFO
 );
 
-extern void
-RegInfoCopy(
-	_Inout_ PREG_INFO_STATIC Dest,
-	_In_ PREG_INFO Src
+void RegInfoFree(
+	PREG_INFO* RegInfo
 );
 
-extern void
-RegInfoDeInit(
-    _Inout_ PREG_INFO RegInfo
-);
+#endif
+ 
 
-extern void 
-RegInfoFree(
-	_Inout_ PREG_INFO* RegInfo
-);
-#endif  /* REGINFO_H */

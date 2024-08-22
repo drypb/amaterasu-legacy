@@ -1,0 +1,6 @@
+﻿  Building 'MiniFilter' with toolset 'WindowsKernelModeDriver10.0' and the 'Desktop' target platform.
+  Stamping x64\Debug\MiniFilter.inf
+  Stamping [Version] section with DriverVer=08/21/2024,23.6.40.102
+C:\Users\davic\source\repos\drypb\amaterasu-legacy\src\MiniFilter.inf(73-73): warning 1205: Section [MiniFilter.DriverFiles] referenced from DelFiles and CopyFiles directive.
+  MiniFilter.vcxproj -> C:\Users\davic\Source\Repos\drypb\amaterasu-legacy\src\x64\Debug\MiniFilter.sys
+C:\Program Files (x86)\Windows Kits\10\build\10.0.22621.0\WindowsDriver.common.targets(1464,5): error : Invalid argument <CN="WDKTestCert win_t,133549938392615679" | 072E77D9A10797E8E60948C1182289135CB1D785> for property <TestCertificate>.

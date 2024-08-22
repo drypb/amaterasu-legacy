@@ -175,7 +175,6 @@ void TokenInfoCopy(_Out_ PTOKEN_INFO_STATIC Dest, _In_ PTOKEN_INFO Src) {
 		return;
 	}
 
-	int k = _Alignof(k);
 
 	line();
 }
