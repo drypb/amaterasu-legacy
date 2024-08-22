@@ -161,14 +161,25 @@ void LoadImageCopy(_Out_ PLOAD_IMAGE_INFO_STATIC Dest, _In_ PLOAD_IMAGE_INFO Src
 
     if (Dest && Src) {
 
-        Dest->PID = Src->PID;
-        Dest->FullImageNameSize = Src->FullImageNameSize;
-        Dest->FileNameSize = Src->FileNameSize;
+        CopyToUserMode(&Dest->PID, &Src->PID, sizeof Dest->PID, __alignof(HANDLE));
 
-        RtlCopyMemory(&Dest->ImageInfo, &Src->ImageInfo, sizeof Src->ImageInfo);
-        RtlCopyMemory(Dest->FullImageName, Src->FullImageName, sizeof Dest->FullImageName);
-        RtlCopyMemory(Dest->FileName, Src->FileName, sizeof Dest->FileName);
+        CopyToUserMode(&Dest->FullImageNameSize, &Src->FullImageNameSize, sizeof(Dest->FullImageNameSize), __alignof(ULONG));
+        CopyToUserMode(&Dest->FileNameSize, &Src->FileNameSize, sizeof(Dest->FileNameSize), __alignof(ULONG));
+
+        CopyToUserMode(&Dest->ImageInfo, Src->ImageInfo, sizeof(Dest->ImageInfo), __alignof(IMAGE_INFO));
+        CopyToUserMode(Dest->FullImageName, Src->FullImageName, sizeof Dest->FullImageName, __alignof(WCHAR));
+        CopyToUserMode(Dest->FileName, Src->FileName, sizeof Dest->FileName, __alignof(WCHAR));
     }
+
+    //if (Dest && Src) {
+
+    //    Dest->FullImageNameSize = Src->FullImageNameSize;
+    //    Dest->FileNameSize = Src->FileNameSize;
+
+    //    RtlCopyMemory(&Dest->ImageInfo, &Src->ImageInfo, sizeof Src->ImageInfo);
+    //    RtlCopyMemory(Dest->FullImageName, Src->FullImageName, sizeof Dest->FullImageName);
+    //    RtlCopyMemory(Dest->FileName, Src->FileName, sizeof Dest->FileName);
+    //}
     line();
 
 }
