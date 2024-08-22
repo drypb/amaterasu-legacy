@@ -330,8 +330,10 @@ NTSTATUS DeviceSetup(_In_ PDRIVER_OBJECT DriverObject) {
         }
     }
 
+    Device->Flags |= DO_BUFFERED_IO;
+	
     DriverObject->DeviceObject = Device;
-
+	
     return Status;
 }
 
