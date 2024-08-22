@@ -286,21 +286,26 @@ void RegInfoCopy(PREG_INFO_STATIC StaticRegInfo, PREG_INFO RegInfo) {
 
 
 	if (StaticRegInfo && RegInfo) {
-
-		StaticRegInfo->RegNotifyClass = RegInfo->RegNotifyClass;
-		StaticRegInfo->CompleteNameSize = RegInfo->CompleteNameSize;
-		StaticRegInfo->DataSize = RegInfo->DataSize;
-		StaticRegInfo->DataType = RegInfo->DataType;
+		//StaticRegInfo->RegNotifyClass = RegInfo->RegNotifyClass;
+		//StaticRegInfo->CompleteNameSize = RegInfo->CompleteNameSize;
+		//StaticRegInfo->DataSize = RegInfo->DataSize;
+		//StaticRegInfo->DataType = RegInfo->DataType;
+		CopyToUserMode(&StaticRegInfo->RegNotifyClass, &RegInfo->RegNotifyClass, sizeof(StaticRegInfo->RegNotifyClass), __alignof(REG_NOTIFY_CLASS));
+		CopyToUserMode(&StaticRegInfo->CompleteNameSize, &RegInfo->CompleteNameSize, sizeof(StaticRegInfo->CompleteNameSize), __alignof(ULONG));
+		CopyToUserMode(&StaticRegInfo->DataSize, &RegInfo->DataSize, sizeof(StaticRegInfo->DataSize), __alignof(ULONG));
+		CopyToUserMode(&StaticRegInfo->DataType, &RegInfo->DataType, sizeof(StaticRegInfo->DataType), __alignof(ULONG));
 
 
 		DataSize = min(MAX_PATH, RegInfo->CompleteNameSize);
 		if (DataSize) {
-			RtlCopyMemory(StaticRegInfo->CompleteName, RegInfo->CompleteName, DataSize * sizeof * RegInfo->CompleteName);
+			CopyToUserMode(StaticRegInfo->CompleteName, RegInfo->CompleteName, DataSize * sizeof * RegInfo->CompleteName, __alignof(WCHAR));
+			//RtlCopyMemory(StaticRegInfo->CompleteName, RegInfo->CompleteName, DataSize * sizeof * RegInfo->CompleteName);
 		}
 
 		DataSize = min(MAX_DATA, RegInfo->DataSize);
 		if (DataSize) {
-			RtlCopyMemory(StaticRegInfo->Data, RegInfo->Data, sizeof * RegInfo->Data * DataSize);
+			CopyToUserMode(StaticRegInfo->Data, RegInfo->Data, sizeof * RegInfo->Data * DataSize, __alignof(WCHAR));
+			//RtlCopyMemory(StaticRegInfo->Data, RegInfo->Data, sizeof * RegInfo->Data * DataSize);
 		}
 	}
 }
