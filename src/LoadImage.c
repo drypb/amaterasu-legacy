@@ -28,6 +28,8 @@ PLOAD_IMAGE_INFO LoadImageInfoAlloc(_In_ POOL_TYPE PoolType) {
      */
     LoadImageInfo->PoolType = PoolType;
 
+
+    line();
     return LoadImageInfo;
 }
 
@@ -59,6 +61,7 @@ PLOAD_IMAGE_INFO LoadImageInfoGet(_In_ POOL_TYPE PoolType, _In_ PLOAD_IMAGE_DATA
         LoadImageInfoFree(&LoadImageInfo);
     }
 
+    line();
     return LoadImageInfo;
 }
 
@@ -87,6 +90,7 @@ NTSTATUS GetExtendedInfo(_In_ PLOAD_IMAGE_INFO LoadImageInfo, _In_ PIMAGE_INFO I
         ExFreePoolWithTag(LoadImageInfo->FullImageName, 'wstr');
     }
 
+    line();
     return Status;
 }
 
@@ -116,6 +120,8 @@ NTSTATUS InitLoadImageInfoFields(_In_ PLOAD_IMAGE_INFO LoadImageInfo, _In_ PIMAG
         Status = GetExtendedInfo(LoadImageInfo, ImageInfo);
     }
 
+    line();
+
     return Status;
 }
 
@@ -141,6 +147,7 @@ NTSTATUS LoadImageInfoInit(_In_ PLOAD_IMAGE_INFO LoadImageInfo, _In_ PIMAGE_INFO
 
     RtlCopyMemory(&LoadImageInfo->ImageInfo, ImageInfo, sizeof *ImageInfo);
 
+    line();
     return Status;
 }
 
@@ -162,6 +169,8 @@ void LoadImageCopy(_Out_ PLOAD_IMAGE_INFO_STATIC Dest, _In_ PLOAD_IMAGE_INFO Src
         RtlCopyMemory(Dest->FullImageName, Src->FullImageName, sizeof Dest->FullImageName);
         RtlCopyMemory(Dest->FileName, Src->FileName, sizeof Dest->FileName);
     }
+    line();
+
 }
 
 /*
@@ -170,11 +179,16 @@ void LoadImageCopy(_Out_ PLOAD_IMAGE_INFO_STATIC Dest, _In_ PLOAD_IMAGE_INFO Src
  *   @LoadImageInfo: Pointer to the LOAD_IMAGE_INFO structure
  */
 void LoadImageInfoDeInit(_In_ PLOAD_IMAGE_INFO LoadImageInfo) {
+    line();
 
     if (LoadImageInfo) {
-        ExFreePoolWithTag(LoadImageInfo->FullImageName, 'wstr');
-        ExFreePoolWithTag(LoadImageInfo->FileName, 'wstr');
+        if (LoadImageInfo->FullImageName)
+            ExFreePoolWithTag(LoadImageInfo->FullImageName, 'wstr');
+        if (LoadImageInfo->FileName)
+            ExFreePoolWithTag(LoadImageInfo->FileName, 'wstr');
     }
+    line();
+
 }
 
 /*
@@ -183,11 +197,13 @@ void LoadImageInfoDeInit(_In_ PLOAD_IMAGE_INFO LoadImageInfo) {
  *  @LoadImageInfo: Pointer to the pointer of the LOAD_IMAGE_INFO structure
  */
 void LoadImageInfoFree(_Inout_ PLOAD_IMAGE_INFO* LoadImageInfo) {
-
+    line();
     if(LoadImageInfo && *LoadImageInfo) {
-        LoadImageInfoDeInit(*LoadImageInfo);
+        // LoadImageInfoDeInit(*LoadImageInfo);
         ExFreePoolWithTag(*LoadImageInfo, 'load');
         *LoadImageInfo = NULL;
     }
+    line();
+
 
 }
